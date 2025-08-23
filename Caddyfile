@@ -1,5 +1,5 @@
 payments.getsupa.net {
-    reverse_proxy 127.0.0.1:6001 {
+    reverse_proxy 127.0.0.1:6002 {
         transport http {
             dial_timeout 10s
             read_timeout 10s
