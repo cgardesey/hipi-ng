@@ -9,15 +9,17 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      // Common fields
       name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       payer_id: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       amount: {
-        type: Sequelize.DOUBLE
+        type: Sequelize.DOUBLE,
+        allowNull: false
       },
       currency: {
         type: Sequelize.STRING,
@@ -25,138 +27,93 @@ module.exports = {
       },
       ref_id: {
         type: Sequelize.STRING,
-        unique: true
+        unique: true,
+        allowNull: false
       },
-
-      // OPay specific fields
-      order_no: {
+      phone_number: {
         type: Sequelize.STRING
+      },
+      email: {
+        type: Sequelize.STRING
+      },
+      order_no: {
+        type: Sequelize.STRING,
+        unique: true
       },
       cashier_url: {
         type: Sequelize.TEXT
       },
-      opay_status: {
-        type: Sequelize.STRING
-      },
-      transaction_id: {
-        type: Sequelize.STRING
+      status: {
+        type: Sequelize.STRING,
+        defaultValue: 'INITIAL'
       },
       pay_method: {
         type: Sequelize.STRING
       },
-      payment_channel: {
+      transaction_id: {
+        type: Sequelize.STRING,
+        unique: true
+      },
+      channel: {
         type: Sequelize.STRING
       },
       fee: {
-        type: Sequelize.DECIMAL(10, 2),
-        defaultValue: 0.00
+        type: Sequelize.DOUBLE
       },
       fee_currency: {
         type: Sequelize.STRING
       },
-
-      // User Info fields
-      user_email: {
+      instrument_type: {
         type: Sequelize.STRING
       },
-      user_mobile: {
+      refunded: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
+      displayed_failure: {
+        type: Sequelize.TEXT
+      },
+      create_time: {
+        type: Sequelize.BIGINT
+      },
+      updated_at_timestamp: {
         type: Sequelize.STRING
       },
-      user_name: {
-        type: Sequelize.STRING
-      },
-
-      // Product Info fields
       product_name: {
         type: Sequelize.STRING
       },
       product_description: {
         type: Sequelize.TEXT
       },
-
-      // OPay Response fields
-      create_time: {
-        type: Sequelize.BIGINT
+      country: {
+        type: Sequelize.STRING,
+        defaultValue: 'NG'
       },
-      update_time: {
-        type: Sequelize.BIGINT
+      user_client_ip: {
+        type: Sequelize.STRING
       },
-      displayed_failure: {
-        type: Sequelize.TEXT
+      customer_visit_source: {
+        type: Sequelize.STRING
       },
-      refunded: {
+      evoke_opay: {
         type: Sequelize.BOOLEAN,
-        defaultValue: false
+        defaultValue: true
       },
-      instrument_type: {
+      expire_at: {
+        type: Sequelize.INTEGER
+      },
+      display_name: {
         type: Sequelize.STRING
       },
-
-      // Legacy fields (for backward compatibility)
-      mno: {
+      sn: {
         type: Sequelize.STRING
       },
-      msisdn: {
+      vat_total: {
+        type: Sequelize.DOUBLE
+      },
+      vat_currency: {
         type: Sequelize.STRING
       },
-      auth_token: {
-        type: Sequelize.STRING
-      },
-      sender_id_number: {
-        type: Sequelize.STRING
-      },
-      msg: {
-        type: Sequelize.STRING
-      },
-      code: {
-        type: Sequelize.STRING
-      },
-      reference: {
-        type: Sequelize.STRING
-      },
-      balance_before: {
-        type: Sequelize.STRING
-      },
-      map_id: {
-        type: Sequelize.STRING
-      },
-      va_version: {
-        type: Sequelize.STRING
-      },
-      map_name: {
-        type: Sequelize.STRING
-      },
-      date: {
-        type: Sequelize.STRING
-      },
-      system_msg: {
-        type: Sequelize.STRING
-      },
-      author_ref_id: {
-        type: Sequelize.STRING
-      },
-      system_code: {
-        type: Sequelize.STRING
-      },
-      type: {
-        type: Sequelize.STRING
-      },
-      user_id: {
-        type: Sequelize.STRING
-      },
-      network: {
-        type: Sequelize.STRING
-      },
-      balance_after: {
-        type: Sequelize.STRING
-      },
-      meta_data_id: {
-        type: Sequelize.STRING
-      },
-      author_ref: {
-        type: Sequelize.STRING
-      },
-
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
@@ -166,7 +123,15 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+
+    // Add indexes for better performance
+    await queryInterface.addIndex('Payments', ['ref_id']);
+    await queryInterface.addIndex('Payments', ['order_no']);
+    await queryInterface.addIndex('Payments', ['transaction_id']);
+    await queryInterface.addIndex('Payments', ['payer_id']);
+    await queryInterface.addIndex('Payments', ['status']);
   },
+
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Payments');
   }

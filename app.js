@@ -4,7 +4,6 @@ const paymentRoute = require('./routes/payment');
 const paymentCallbackRoute = require('./routes/payment.callback');
 const samplePaymentCallbackRoute = require('./routes/sample-payment-callback')
 const paymentStatusRoute = require('./routes/payment-status');
-const availableNetworksStatusRoute = require('./routes/available-networks');
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
 
@@ -49,6 +48,5 @@ app.use("/payments", paymentRoute);
 app.use("/payments/callback", paymentCallbackRoute);
 app.use("/sample-payment-callback", samplePaymentCallbackRoute);
 app.use("/payment-status", paymentStatusRoute);
-app.use("/available-networks", availableNetworksStatusRoute);
 
 module.exports = app;

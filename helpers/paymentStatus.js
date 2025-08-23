@@ -1,114 +1,124 @@
-const models = require('../models');
-const config = require("../config/config.json");
-const opayHelper = require('./opay-helper-functions');
+const axios = require('axios');
+const config = require('../config/config.json');
+const { generateSignature, getBaseUrl, mapOpayStatus } = require('./opay-helper-functions');
 
 /**
- * Update payment status from Nsano callback
- * @param {object} callbackData - Nsano callback data
+ * Query payment status from OPay API
+ * @param {string} reference - Payment reference
+ * @returns {object} Payment status data
  */
-async function nsanoPaymentStatusUpdate(callbackData) {
-    let updateObj = {};
-
-    // Map Nsano callback fields to database fields based on your model
-    const fieldMapping = {
-        'msg': 'msg',
-        'code': 'code',
-        'system_msg': 'system_msg',
-        'system_code': 'system_code',
-        'authorRefID': 'author_ref_id',
-        'userID': 'user_id',
-        'transactionID': 'transaction_id',
-        'network': 'network',
-        'reference': 'reference',
-        'balBefore': 'balance_before',
-        'balAfter': 'balance_after',
-        'metadataID': 'meta_data_id',
-        'refID': 'ref_id',
-        'author_ref': 'author_ref',
-        'date': 'date',
-        'type': 'type'
-    };
-
-    // Build update object
-    Object.keys(fieldMapping).forEach(nsanoField => {
-        if (nsanoField in callbackData && callbackData[nsanoField] !== undefined) {
-            updateObj[fieldMapping[nsanoField]] = callbackData[nsanoField];
-        }
-    });
-
-    // Find payment by refID or authorRefID
-    let whereClause = {};
-    if (callbackData.refID) {
-        whereClause.ref_id = callbackData.refID;
-    } else if (callbackData.authorRefID) {
-        const shortName = config.nsano.short_name;
-        if (callbackData.authorRefID.startsWith(shortName)) {
-            whereClause.ref_id = callbackData.authorRefID.substring(shortName.length);
-        }
-    }
-
-    if (Object.keys(whereClause).length > 0) {
-        await models.Payment.update(updateObj, { where: whereClause });
-    }
-}
-
-/**
- * Update payment status from OPay callback
- * @param {object} callbackData - OPay callback data
- */
-async function opayPaymentStatusUpdate(callbackData) {
-    const { payload } = callbackData;
-
-    const updateObj = {
-        opay_status: payload.status,
-        transaction_id: payload.transactionId,
-        payment_channel: payload.channel,
-        instrument_type: payload.instrumentType,
-        fee: parseFloat(payload.fee || 0) / 100,
-        fee_currency: payload.feeCurrency,
-        update_time: new Date(payload.updated_at).getTime(),
-        displayed_failure: payload.displayedFailure || '',
-        refunded: payload.refunded || false
-    };
-
-    // Map OPay status to internal codes
-    const statusMapping = opayHelper.mapOpayStatus(payload.status);
-    updateObj.code = statusMapping.code;
-    updateObj.msg = statusMapping.msg;
-
-    // Remove undefined values
-    Object.keys(updateObj).forEach(key => {
-        if (updateObj[key] === undefined || updateObj[key] === null) {
-            delete updateObj[key];
-        }
-    });
-
-    // Find and update payment by reference
-    await models.Payment.update(updateObj, {
-        where: { ref_id: payload.reference }
-    });
-}
-
-/**
- * Generic payment status update function
- * @param {object} callbackData - Callback data
- * @param {string} source - Source of callback ('nsano', 'opay')
- */
-async function paymentStatusUpdate(callbackData, source = 'nsano') {
+async function queryPaymentStatus(reference) {
     try {
-        if (source === 'opay') {
-            await opayPaymentStatusUpdate(callbackData);
+        const payload = {
+            reference: reference,
+            country: config.opay.country
+        };
+
+        const payloadString = JSON.stringify(payload);
+        const signature = generateSignature(payloadString, config.opay.private_key);
+
+        const baseUrl = getBaseUrl(true); // Use test environment for now
+        const apiUrl = `${baseUrl}/api/v1/international/cashier/status`;
+
+        const response = await axios.post(apiUrl, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${signature}`,
+                'MerchantId': config.opay.merchant_id
+            }
+        });
+
+        if (response.data.code === '00000') {
+            const opayData = response.data.data;
+
+            return {
+                success: true,
+                data: {
+                    reference: opayData.reference,
+                    order_no: opayData.orderNo,
+                    status: opayData.status,
+                    amount: opayData.amount,
+                    vat: opayData.vat,
+                    create_time: opayData.createTime,
+                    mapped_code: mapOpayStatus(opayData.status)
+                }
+            };
         } else {
-            await nsanoPaymentStatusUpdate(callbackData);
+            return {
+                success: false,
+                error: response.data.message || 'Status query failed',
+                code: response.data.code
+            };
         }
+
     } catch (error) {
-        console.error(`Payment status update error (${source}):`, error);
-        throw error;
+        console.error('OPay status query error:', error);
+        return {
+            success: false,
+            error: error.response?.data?.message || error.message || 'Status query failed',
+            code: error.response?.data?.code
+        };
+    }
+}
+
+/**
+ * Update payment status from callback data
+ * @param {object} callbackData - OPay callback data
+ * @param {object} models - Sequelize models
+ * @returns {object} Update result
+ */
+async function updatePaymentFromCallback(callbackData, models) {
+    try {
+        const payment = await models.Payment.findOne({
+            where: { ref_id: callbackData.reference }
+        });
+
+        if (!payment) {
+            console.error('Payment not found for callback:', callbackData.reference);
+            return {
+                success: false,
+                error: 'Payment record not found'
+            };
+        }
+
+        // Map callback data to database fields
+        const updateData = {
+            status: callbackData.status,
+            transaction_id: callbackData.transactionId,
+            channel: callbackData.channel,
+            fee: parseFloat(callbackData.fee) / 100, // Convert from cents
+            fee_currency: callbackData.feeCurrency,
+            instrument_type: callbackData.instrumentType,
+            refunded: callbackData.refunded,
+            displayed_failure: callbackData.displayedFailure,
+            updated_at_timestamp: callbackData.updated_at
+        };
+
+        // Remove undefined values
+        Object.keys(updateData).forEach(key => {
+            if (updateData[key] === undefined || updateData[key] === null) {
+                delete updateData[key];
+            }
+        });
+
+        await payment.update(updateData);
+
+        return {
+            success: true,
+            payment: payment,
+            mapped_code: mapOpayStatus(callbackData.status)
+        };
+
+    } catch (error) {
+        console.error('Payment update error:', error);
+        return {
+            success: false,
+            error: error.message
+        };
     }
 }
 
 module.exports = {
-    paymentStatusUpdate,
-    nsanoPaymentStatusUpdate,
-    opayPaymentStatusUpdate
+    queryPaymentStatus,
+    updatePaymentFromCallback
 };
