@@ -1,0 +1,40 @@
+{
+  "production": {
+    "username": "root",
+    "password": "Fa!n)m)kpokp3dz!",
+    "database": "hipi_ci",
+    "host": "store.getsupa.net",
+    "dialect": "mysql",
+    "port": 3306,
+    "operatorsAliases": false
+  },
+  "nsano": {
+    "api_key": "5c2b4a34887d4e649a2bb7a80e6ba3c8",
+    "base_url": "https://fs1.nsano.com:5001",
+    "kuwaita": "malipo",
+    "recipient": "",
+    "short_name": "GO2SUPA"
+  },
+
+  "ci_hipi": {
+    "ip": "41.189.178.92",
+    "payment_callback_url": "",
+    "api_token": "efbe98ef-f519-4e8b-9a6e-83e16193e351"
+  },
+  "opay": {
+    "merchant_id": "xxxxxxxxxxxxxx",
+    "public_key": "OPAYPUB*************54133",
+    "private_key": "OPAYPRV*************54133",
+    "test_base_url": "https://testapi.opaycheckout.com",
+    "live_base_url": "https://liveapi.opaycheckout.com",
+    "test_query_url": "https://sandboxapi.opaycheckout.com",
+    "live_query_url": "https://api.opaycheckout.com",
+    "return_url": "https://your-return-url.com",
+    "cancel_url": "https://your-cancel-url.com",
+    "callback_url": "https://your-callback-url.com/opay/callback",
+    "country": "NG",
+    "currency": "NGN",
+    "environment": "test",
+    "expire_minutes": 30
+  }
+}

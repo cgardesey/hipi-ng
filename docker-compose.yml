@@ -1,0 +1,73 @@
+version: "3.2"
+services:
+  nodejs:
+    build:
+      context: .
+    image: cgardesey/supa-pg-gh
+    networks:
+      - frontend
+      - backend
+    environment:
+      - MYSQL_HOST=mysql-app
+      - MYSQL_USER=cgard
+      - MYSQL_PASS=Kowsamadmin500@prepeez.com
+      - MYSQL_DB=supa_pg_gh
+    volumes:
+      - ./www/:/var/www/html/
+    ports:
+      - "55559:6001"
+    restart: always
+    container_name: nodejs-app
+  mysql:
+    image: mysql:5.7
+    networks:
+      - backend
+    environment:
+      - MYSQL_ROOT_PASSWORD=Kowsamadmin404@prepeez.com
+      - MYSQL_USER=cgard
+      - MYSQL_PASSWORD=Kowsamadmin500@prepeez.com
+      - MYSQL_DATABASE=supa_pg_gh
+    ports:
+      - "60001:3306"
+    volumes:
+      - mysql-datavolume:/var/lib/mysql
+    restart: always
+    container_name: mysql-app
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:4.7
+    depends_on:
+      - mysql
+    networks:
+      - backend
+    ports:
+      - "60000:80"
+    environment:
+      - PMA_HOST=mysql-app
+      - PMA_PORT= 3306
+    volumes:
+      - /sessions
+    restart: always
+    container_name: phpmyadmin-app
+  st-agent:
+    image: sematext/agent:latest
+    privileged: true
+    environment:
+      - INFRA_TOKEN=68e883b5-5217-47dd-971a-fd67ef0c5b3c
+      - REGION=EU
+    cap_add:
+      - SYS_ADMIN
+    restart: always
+    volumes:
+      - /:/hostfs:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - /var/run/:/var/run
+      - /sys/kernel/debug:/sys/kernel/debug
+      - /sys:/host/sys:ro
+      - /dev:/hostfs/dev:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+volumes:
+  mysql-datavolume:
+networks:
+  frontend:
+  backend:
