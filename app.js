@@ -17,7 +17,7 @@ const options = {
         servers: [
             {
                 url: `https://hipi-ng.gosupa.io`,
-                // url: `http://localhost:6002`
+                // url: `http://localhost:6022`
             },
         ],
     },
