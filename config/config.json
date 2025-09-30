@@ -5,8 +5,7 @@
     "database": "hipi_ng",
     "host": "store.getsupa.net",
     "dialect": "mysql",
-    "port": 3306,
-    "operatorsAliases": false
+    "port": 3306
   },
   "production": {
     "username": "root",

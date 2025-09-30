@@ -128,6 +128,18 @@ const router = express.Router();
  *           }
  *           ```
  *
+ *           **The below table interprets the error codes and error message parameters this API may return**
+ *
+ *           | Error Code  | Error Message
+ *           | ------------| -------------------------------------------------------------|
+ *           | 02000       | authentication failed.                                       |
+ *           | 02001       | request params not valid.                                    |
+ *           | 02003       | payMethod not support.                                       |
+ *           | 02004       | the payment reference(merchant order number) already exists. |
+ *           | 02002       | merchant not configured with this function.                  |
+ *           | 02007       | merchant not available.                                      |
+ *           | 50003       | service not available, please try again.                     |
+ *
  *           **Payment Methods Supported in Nigeria:**
  *           - BankCard (Visa, MasterCard, Verve)
  *           - BankTransfer
