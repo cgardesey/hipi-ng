@@ -17,9 +17,9 @@
     "operatorsAliases": false
   },
   "opay": {
-    "merchant_id": "281825052606997",
-    "public_key": "OPAYPUB17482506042950.06096702796726272",
-    "private_key": "OPAYPRV17482506042950.710273481803226",
+    "merchant_id": "256625110736707",
+    "private_key": "OPAYPRV17625187907170.2857063602678461",
+    "public_key": "OPAYPUB17625187907170.8110291264469561",
     "test_url": "https://testapi.opaycheckout.com",
     "live_url": "https://liveapi.opaycheckout.com",
     "callback_url": "https://yourapp.com/api/opay/callback",
