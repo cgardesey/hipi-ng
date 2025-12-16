@@ -17,8 +17,8 @@ const options = {
             description: "Payment API For Hipi Service"},
         servers: [
             {
-                // url: `https://hipi-ng.gosupa.io`,
-                url: `http://localhost:6022`
+                url: `https://hipi-ng.gosupa.io`,
+                // url: `http://localhost:6022`
             },
         ],
     },
